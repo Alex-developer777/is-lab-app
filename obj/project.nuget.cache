@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "EqE7Uw+EO/o=",
+  "success": true,
+  "projectFilePath": "C:\\is-labs\\lab4\\IsLabApp\\IsLabApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\aleks\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.2\\microsoft.aspnetcore.openapi.10.0.2.nupkg.sha512",
+    "C:\\Users\\aleks\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
