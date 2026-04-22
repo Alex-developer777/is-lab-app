@@ -4,41 +4,24 @@ using System.Collections.Concurrent;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-[cite_start]// Модель заметки [cite: 365]
-public record Note(int Id, string Title, string Text, DateTime CreatedAt);
-[cite_start]// Хранилище в памяти (CRUD) [cite: 364]
-var _notes = new ConcurrentDictionary<int, Note>();
+[cite_start]// Хранилище (CRUD в памяти) [cite: 364]
+var _notes = new ConcurrentDictionary<int, NoteRecord>();
 var _idCounter = 1;
 
-[cite_start]// 1. Диагностика: /health [cite: 356]
+[cite_start]// Диагностические эндпоинты [cite: 354, 357, 376]
 app.MapGet("/health", () => new { Status = "ok", Time = DateTime.UtcNow });
+app.MapGet("/version", (IConfiguration conf) => new { App = conf["App:Name"], Ver = conf["App:Version"] });
+app.MapGet("/db/ping", () => Results.Problem("SQL Server not reachable yet (expected in Lab 7)"));
 
-[cite_start]// 2. Диагностика: /version [cite: 357]
-app.MapGet("/version", (IConfiguration conf) => new {
-    AppName = conf["App:Name"],
-    Version = conf["App:Version"]
+[cite_start]// Прикладной API "Заметки" [cite: 366]
+app.MapPost("/api/notes", (NoteRecord note) => {
+    var n = note with { Id = _idCounter++, CreatedAt = DateTime.UtcNow };
+    _notes[n.Id] = n;
+    return Results.Created($"/api/notes/{n.Id}", n);
 });
-
-[cite_start]// 3. Проверка БД: /db/ping [cite: 376, 377]
-app.MapGet("/db/ping", (IConfiguration conf) => {
-    var connectionString = conf.GetConnectionString("Mssql");
-    [cite_start]// Здесь мы просто имитируем логику, так как БД будет в ЛР7 [cite: 378]
-    return Results.Problem("SQL Server not reachable yet (expected in Lab 7)");
-});
-
-[cite_start]// 4. API Заметки: CRUD [cite: 366]
-app.MapPost("/api/notes", (Note note) => {
-    var newNote = note with { Id = _idCounter++, CreatedAt = DateTime.UtcNow };
-    _notes[newNote.Id] = newNote;
-    return Results.Created($"/api/notes/{newNote.Id}", newNote);
-});
-
 app.MapGet("/api/notes", () => _notes.Values);
 
-app.MapGet("/api/notes/{id}", (int id) =>
-    _notes.TryGetValue(id, out var n) ? Results.Ok(n) : Results.NotFound());
+app.Run(); // Конец логики
 
-app.MapDelete("/api/notes/{id}", (int id) =>
-    _notes.TryRemove(id, out _) ? Results.NoContent() : Results.NotFound());
-
-app.Run();
+// ТИПЫ ДОЛЖНЫ БЫТЬ ТОЛЬКО ЗДЕСЬ (В КОНЦЕ ФАЙЛА)
+public record NoteRecord(int Id, string Title, string Text, DateTime? CreatedAt);
